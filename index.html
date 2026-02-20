@@ -3,19 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LevelUp | GOD MODE v5</title>
+    <title>LevelUp | GOD MODE v7</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body id="game-body">
-
-    <div id="loading-screen">
-        <div class="loader-content">
-            <h2 class="glitch">SYSTEM INITIALIZING...</h2>
-            <div class="loader-bar"><div class="loader-fill"></div></div>
-        </div>
-    </div>
+    <div id="loading-screen"><div class="loader-content"><h2 class="glitch">SYSTEM INITIALIZING...</h2><div class="loader-bar"><div class="loader-fill"></div></div></div></div>
 
     <div class="container">
         <div class="music-player">
@@ -26,20 +20,24 @@
 
         <header class="character-panel glass-panel">
             <div class="hud-left">
-                <div class="avatar-glow"><div class="avatar" id="avatar">🥷</div></div>
+                <div class="avatar-glow" id="avatar-container"><div class="avatar" id="avatar">🥷</div></div>
                 <div class="class-tag" id="class-display">Loading...</div>
+                <div id="pet-display" style="font-size: 0.8rem; text-align: center; margin-top: 5px; cursor: help;" title="Lv.10+: 5% chance for Double Gold">🥚 Pet Lv.1</div>
             </div>
             <div class="hud-main">
                 <div class="top-row">
-                    <h1 id="username">Player</h1>
+                    <h1><span id="prestige-badge"></span> <span id="username">Player</span></h1>
                     <div class="currency">🪙 <span id="gold-count">0</span>g</div>
                     <div class="streak-box">🔥 <span id="streak-count">0</span> Day Streak</div>
+                    <div id="combo-meter" class="combo-box">Combo: x<span id="combo-count">0</span></div>
                 </div>
                 <div class="bars-stack">
                     <div class="bar-wrap"><small>HP</small><div class="bar"><div id="hp-fill" class="fill hp"></div></div></div>
                     <div class="bar-wrap"><small>XP</small><div class="bar"><div id="xp-fill" class="fill xp"></div></div></div>
+                    <div class="bar-wrap"><small>STM</small><div class="bar"><div id="stamina-fill" class="fill stamina"></div></div></div>
                     <div class="bar-wrap rival-wrap"><small>RIVAL</small><div class="bar"><div id="rival-fill" class="fill rival"></div></div></div>
                 </div>
+                <div class="world-map">🗺️ World Progress: <progress id="map-progress" value="0" max="1000"></progress></div>
             </div>
         </header>
 
@@ -47,18 +45,31 @@
             <button class="nav-btn active" data-tab="quests">Quests</button>
             <button class="nav-btn" data-tab="skills">Skills</button>
             <button class="nav-btn" data-tab="shop">Shop</button>
-            <button class="nav-btn" data-tab="inventory">Inventory</button>
-            <button class="nav-btn" data-tab="settings">Settings</button>
+            <button class="nav-btn" data-tab="inventory">Bag</button>
+            <button class="nav-btn" data-tab="dungeon">Dungeon</button>
+            <button class="nav-btn" data-tab="trophies">Trophies</button>
+            <button class="nav-btn" data-tab="settings">⚙️</button>
         </nav>
 
         <main class="tab-content">
             <section id="tab-quests" class="tab-pane active">
+                <div class="daily-bounty glass-panel" id="seasonal-event-box" style="border-color: #00ffff; box-shadow: 0 0 10px #00ffff; margin-bottom: 10px;">
+                    <h3>❄️ Frost Festival Event</h3>
+                    <p id="seasonal-text">Complete 3 INT tasks to unlock Frost Aura (<span id="event-prog">0</span>/3)</p>
+                </div>
+                <div class="daily-bounty glass-panel" id="daily-bounty-box">
+                    <h3>🎯 Daily Bounty</h3>
+                    <p id="bounty-text">Loading...</p>
+                </div>
                 <div class="quote-box" id="quote-box">"Ready for duty."</div>
                 <div id="quests-list" class="quests-grid"></div>
             </section>
 
             <section id="tab-skills" class="tab-pane">
-                <div class="tree-root"><h2>Level <span id="tree-level">1</span></h2></div>
+                <div class="tree-root">
+                    <h2>Level <span id="tree-level">1</span></h2>
+                    <button id="prestige-btn" class="hidden action-btn" onclick="prestige()">🌟 PRESTIGE 🌟</button>
+                </div>
                 <div class="skills-grid">
                     <div class="skill-card"><h3>💪 STR</h3><div id="skill-str">Lv.1</div></div>
                     <div class="skill-card"><h3>🧠 INT</h3><div id="skill-int">Lv.1</div></div>
@@ -71,7 +82,25 @@
             </section>
 
             <section id="tab-inventory" class="tab-pane">
+                <h3 style="text-align:center;">Active Gear: <span id="active-gear">None</span></h3>
+                <h4 style="text-align:center; font-size: 0.8rem;">Active Aura: <span id="active-aura">None</span></h4>
                 <div class="inventory-grid" id="inventory-list"></div>
+            </section>
+
+            <section id="tab-dungeon" class="tab-pane">
+                <div class="glass-panel text-center">
+                    <h3>The Abyss - Floor <span id="dungeon-floor">1</span></h3>
+                    <p>Use Stamina (earned from quests) to explore.</p>
+                    <button class="action-btn" style="background: var(--accent);" onclick="exploreDungeon()">Explore Floor (Cost: 1 STM)</button>
+                    <div id="dungeon-log" class="log-box"></div>
+                </div>
+            </section>
+
+            <section id="tab-trophies" class="tab-pane">
+                <div class="glass-panel text-center">
+                    <h3>Hall of Trophies</h3>
+                    <div class="inventory-grid" id="trophies-list"></div>
+                </div>
             </section>
 
             <section id="tab-settings" class="tab-pane">
@@ -79,19 +108,11 @@
                     <h3>Quest Creator</h3>
                     <div class="creator-form">
                         <input type="text" id="task-name" placeholder="Quest Name">
-                        <select id="task-type">
-                            <option value="str">Strength (Physical)</option>
-                            <option value="int">Intellect (Mental)</option>
-                            <option value="dis">Discipline (Habits)</option>
-                        </select>
-                        <select id="task-diff">
-                            <option value="1">Normal (1x XP)</option>
-                            <option value="2">Hard (2x XP + 20% Lootbox Chance)</option>
-                        </select>
+                        <select id="task-type"><option value="str">Strength</option><option value="int">Intellect</option><option value="dis">Discipline</option></select>
+                        <select id="task-diff"><option value="1">Normal (1x XP)</option><option value="2">Hard (2x XP + 20% Lootbox)</option></select>
                         <button class="action-btn" onclick="addCustomTask()">➕ Create Quest</button>
                     </div>
                     <hr>
-                    <h3>System Options</h3>
                     <label class="switch-wrap"><span>HARDCORE MODE</span><input type="checkbox" id="hardcore-toggle"></label>
                     <button class="danger-btn" id="wipe-btn">Full System Wipe</button>
                 </div>
@@ -103,9 +124,9 @@
         <div class="modal-content glass-panel">
             <h2>Choose Your Path</h2>
             <div class="class-options">
-                <div class="class-choice" data-class="Warrior">⚔️ <h3>Warrior</h3><p>Physical Master</p></div>
-                <div class="class-choice" data-class="Mage">🔮 <h3>Mage</h3><p>Deep Thinker</p></div>
-                <div class="class-choice" data-class="Rogue">🎭 <h3>Rogue</h3><p>Disciplined Shadow</p></div>
+                <div class="class-choice" data-class="Warrior">⚔️ <h3>Warrior</h3></div>
+                <div class="class-choice" data-class="Mage">🔮 <h3>Mage</h3></div>
+                <div class="class-choice" data-class="Rogue">🎭 <h3>Rogue</h3></div>
             </div>
         </div>
     </div>
@@ -115,10 +136,9 @@
             <h2 class="boss-title">⚠️ BOSS APPEARED ⚠️</h2>
             <div id="boss-sprite">👹</div>
             <div class="bar boss-hp-bar"><div id="boss-hp-fill" class="fill hp" style="width: 100%;"></div></div>
-            <p>CLICK TO VANQUISH SLOTH!</p>
+            <p>CLICK TO VANQUISH!</p>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
